@@ -1,0 +1,94 @@
+# ════════════════════════════════════════════════════════════
+#  MotoSpot — .htaccess
+#  Seguridad + Routing + Performance
+# ════════════════════════════════════════════════════════════
+
+# ── 1. Deshabilitar listado de directorios ───────────────────
+Options -Indexes
+
+# ── 1b. Eximir OAuth de ModSecurity (Google envía URLs en query string) ──────
+<IfModule mod_security2.c>
+    <Files "oauth-google.php">
+        SecRuleEngine Off
+    </Files>
+</IfModule>
+<IfModule mod_security.c>
+    <Files "oauth-google.php">
+        SecFilterEngine Off
+    </Files>
+</IfModule>
+
+# ── 2. Bloquear archivos sensibles ──────────────────────────
+<FilesMatch "^(\.env|\.gitignore|composer\.json|composer\.lock|package\.json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(sql|log|ini|sh|bash|bak|swp|dist)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Bloquear acceso directo a includes/ (solo PHP interno)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^includes/ - [F,L]
+</IfModule>
+
+# Bloquear setup/install
+<FilesMatch "^(setup|install)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ── 3. Proteger uploads: solo imágenes accesibles ───────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_FILENAME} !\.(jpg|jpeg|png|gif|webp)$ [NC]
+    RewriteRule ^uploads/ - [F,L]
+</IfModule>
+
+# ── 4. Routing principal: servir páginas desde /public/ ─────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # No reescribir archivos y carpetas que existen en raíz
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Archivos PHP no encontrados en raíz → buscar en /public/
+    RewriteRule ^([^/]+\.php)$ /public/$1 [L,QSA]
+
+    # Ocultar /public/ en URL: redirigir acceso directo
+    RewriteCond %{THE_REQUEST} \s/public/([^\s]+)
+    RewriteRule ^public/(.+)$ /$1 [R=301,L]
+</IfModule>
+
+# ── 5. Headers de seguridad ──────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── 6. Página de error 404 personalizada ────────────────────
+ErrorDocument 404 /404.php
+
+# ── 7. Compresión GZIP ───────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# ── 8. Cache de archivos estáticos ──────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg  "access plus 1 month"
+    ExpiresByType image/png   "access plus 1 month"
+    ExpiresByType image/gif   "access plus 1 month"
+    ExpiresByType image/webp  "access plus 1 month"
+    ExpiresByType text/css    "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>

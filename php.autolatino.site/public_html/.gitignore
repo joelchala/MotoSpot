@@ -1,0 +1,37 @@
+# MotoSpot — .gitignore
+
+# Entorno y credenciales (NUNCA versionar)
+.env
+.env.local
+.env.production
+
+# Dependencias
+vendor/
+node_modules/
+
+# Uploads de usuarios
+uploads/
+storage/
+
+# Logs
+*.log
+storage/logs/
+
+# Cache
+storage/cache/
+*.cache
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# PHP
+*.bak
+*.swp

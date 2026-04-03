@@ -1,0 +1,16 @@
+# MotoSpot — /public/ directory
+# Las URLs se manejan desde el .htaccess raíz
+Options -Indexes
+
+# Eximir oauth-google.php de ModSecurity
+# (Google OAuth callback incluye URLs codificadas en query string)
+<IfModule mod_security2.c>
+    <Files "oauth-google.php">
+        SecRuleEngine Off
+    </Files>
+</IfModule>
+<IfModule mod_security.c>
+    <Files "oauth-google.php">
+        SecFilterEngine Off
+    </Files>
+</IfModule>

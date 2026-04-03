@@ -1,0 +1,63 @@
+# 🔒 CREDENCIALES Y SECRETOS - NUNCA SUBIR
+.motospot/.env
+.env
+.env.local
+.env.*.local
+config/.env
+secrets/
+credentials/
+
+# 📁 DIRECTORIOS SENSIBLES
+storage/uploads/           # Archivos subidos por usuarios
+storage/logs/              # Logs con datos sensibles
+storage/cache/             # Cache temporal
+uploads/                   # Si existe en root
+
+# 🗂️ ARCHIVOS TEMPORALES
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 💻 IDE Y EDITORES
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.iml
+.eclipse/
+.netbeans/
+*.emacs
+
+# 📦 DEPENDENCIAS (Si agregás Composer)
+vendor/
+composer.lock
+
+# 🔍 TESTING Y ANÁLISIS
+phpunit.xml
+.phpunit.result.cache
+clover.xml
+coverage/
+.phpcs-cache
+
+# 🌐 NODE MODULES (Si agregás frontend build)
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# 📊 HERRAMIENTAS
+.git-credentials
+.history/
+.vimrc
+.bash_history
+
+# 💾 BACKUPS
+*.bak
+*.backup
+*.swp~
