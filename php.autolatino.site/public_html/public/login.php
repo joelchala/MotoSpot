@@ -33,12 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($resultado['success']) {
                 // Redirigir a la página solicitada o al home (validar que sea ruta interna)
-                $redirect = $_GET['redirect'] ?? '/index.php';
-                if (!str_starts_with($redirect, '/') || str_starts_with($redirect, '//')) {
-                    $redirect = '/index.php';
-                }
+                $redirect = validarURL($_GET['redirect'] ?? '', [
+                    '/index.php',
+                    '/listado-vehiculos.php',
+                    '/mis-publicaciones.php',
+                    '/perfil.php',
+                    '/planes.php',
+                    '/embarcaciones.php'
+                ]);
                 header("Location: $redirect");
-            exit();
+                exit();
         } else {
             $error = $resultado['message'];
         }

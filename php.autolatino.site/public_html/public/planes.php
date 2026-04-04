@@ -112,15 +112,22 @@ $mensajePromo = '';
 $tipoPromo    = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_promo'])) {
-    $codigo = strtoupper(trim($_POST['codigo_promo']));
-    
-    if (!estaAutenticado()) {
-        $mensajePromo = 'Debes iniciar sesion para canjear un codigo.';
+    // Verificar CSRF token
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verificarCSRFToken($csrf_token)) {
+        $mensajePromo = 'Token de seguridad inválido. Por favor, intenta de nuevo.';
         $tipoPromo = 'error';
     } else {
-        $resultado = canjearCodigoPromocional($codigo, $_SESSION['usuario_id']);
-        $mensajePromo = $resultado['message'];
-        $tipoPromo = $resultado['success'] ? 'success' : 'error';
+        $codigo = strtoupper(trim($_POST['codigo_promo']));
+        
+        if (!estaAutenticado()) {
+            $mensajePromo = 'Debes iniciar sesión para canjear un código.';
+            $tipoPromo = 'error';
+        } else {
+            $resultado = canjearCodigoPromocional($codigo, $_SESSION['usuario_id']);
+            $mensajePromo = $resultado['message'];
+            $tipoPromo = $resultado['success'] ? 'success' : 'error';
+        }
     }
 }
 
@@ -396,6 +403,7 @@ include __DIR__ . '/../includes/navbar.php';
             <div class="alert-<?= $tipoPromo ?>"><?= htmlspecialchars($mensajePromo) ?></div>
         <?php endif; ?>
         <form action="/planes.php" method="POST" class="promo-form">
+            <input type="hidden" name="csrf_token" value="<?php echo generarCSRFToken(); ?>">
             <input type="text" name="codigo_promo" class="promo-input"
                    placeholder="Ej: DEALER-XXXXXXXX" maxlength="20" required>
             <button type="submit" class="promo-submit">Canjear</button>

@@ -154,25 +154,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $fotosSubidas = 0;
                 foreach ($_FILES['fotos']['tmp_name'] as $index => $tmpName) {
-                    if ($_FILES['fotos']['error'][$index] === UPLOAD_ERR_OK) {
-                        $fileName = uniqid() . '_' . basename($_FILES['fotos']['name'][$index]);
-                        $targetPath = $uploadDir . $fileName;
+                    if ($_FILES['fotos']['error'][$index] !== UPLOAD_ERR_OK) {
+                        continue;
+                    }
+                    
+                    // Generar nombre seguro usando random_bytes
+                    $origName = $_FILES['fotos']['name'][$index];
+                    $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    $nameResult = generarNombreArchivoSeguro($origName, $allowedExt);
+                    
+                    if (!$nameResult['valid']) {
+                        logger('warning', 'Upload rejected: invalid filename', [
+                            'filename' => $origName,
+                            'reason' => $nameResult['error']
+                        ]);
+                        continue;
+                    }
+                    
+                    $fileName = $nameResult['filename'];
+                    $targetPath = $uploadDir . $fileName;
+                    
+                    // Validar tipo MIME de forma segura (no mime_content_type)
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    $fileType = getMimeType($tmpName);
+                    
+                    if (!$fileType || !in_array($fileType, $allowedMimes, true)) {
+                        logger('warning', 'Upload rejected: invalid MIME type', [
+                            'filename' => $origName,
+                            'mime' => $fileType
+                        ]);
+                        continue;
+                    }
+                    
+                    // Validar tamaño (máximo 5MB)
+                    $maxSize = 5 * 1024 * 1024;
+                    if ($_FILES['fotos']['size'][$index] > $maxSize) {
+                        logger('warning', 'Upload rejected: file too large', [
+                            'filename' => $origName,
+                            'size' => $_FILES['fotos']['size'][$index]
+                        ]);
+                        continue;
+                    }
+                    
+                    // Mover archivo
+                    if (move_uploaded_file($tmpName, $targetPath)) {
+                        $fotoUrl = '/uploads/vehiculos/' . $fileName;
+                        $esPrincipal = ($fotosSubidas === 0) ? 1 : 0;
                         
-                        // Validar tipo de archivo
-                        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                        $fileType = mime_content_type($tmpName);
+                        $sqlFoto = "INSERT INTO ms_vehiculo_fotos (vehiculo_id, url_foto, orden, es_principal) VALUES (?, ?, ?, ?)";
+                        executeQuery($sqlFoto, [$vehiculoId, $fotoUrl, $fotosSubidas, $esPrincipal]);
+                        $fotosSubidas++;
                         
-                        if (in_array($fileType, $allowedTypes)) {
-                            if (move_uploaded_file($tmpName, $targetPath)) {
-                                // Insertar referencia en base de datos
-                                $fotoUrl = '/uploads/vehiculos/' . $fileName;
-                                $esPrincipal = ($fotosSubidas === 0) ? 1 : 0;
-                                
-                                $sqlFoto = "INSERT INTO ms_vehiculo_fotos (vehiculo_id, url_foto, orden, es_principal) VALUES (?, ?, ?, ?)";
-                                executeQuery($sqlFoto, [$vehiculoId, $fotoUrl, $fotosSubidas, $esPrincipal]);
-                                $fotosSubidas++;
-                            }
-                        }
+                        logger('info', 'Image uploaded', [
+                            'vehiculo_id' => $vehiculoId,
+                            'filename' => $fileName
+                        ]);
+                    } else {
+                        logger('error', 'Upload failed: move_uploaded_file', [
+                            'filename' => $origName,
+                            'target' => $targetPath
+                        ]);
                     }
                 }
             }

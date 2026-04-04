@@ -75,16 +75,25 @@ function queueEmail(
  */
 function emailTemplate(string $titulo, string $contenido, string $cta = '', string $ctaUrl = ''): string
 {
+    // Sanitizar inputs para prevenir HTML/JS injection
+    $titulo_safe = htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8');
+    $contenido_safe = $contenido; // Ya debe estar sanitizado por el llamador
+    $cta_safe = htmlspecialchars($cta, ENT_QUOTES, 'UTF-8');
+    $ctaUrl_safe = htmlspecialchars($ctaUrl, ENT_QUOTES, 'UTF-8');
+    
     $ctaBlock = '';
-    if ($cta && $ctaUrl) {
-        $ctaBlock = "
+    if ($cta_safe && $ctaUrl_safe) {
+        // Validar que la URL sea una ruta interna válida
+        if (filter_var($ctaUrl_safe, FILTER_VALIDATE_URL) || str_starts_with($ctaUrl_safe, '/')) {
+            $ctaBlock = "
         <p style='text-align:center;margin:30px 0'>
-            <a href='$ctaUrl'
+            <a href='" . $ctaUrl_safe . "'
                style='background:#e63946;color:#fff;padding:12px 28px;
                       border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px'>
-                $cta
+                " . $cta_safe . "
             </a>
         </p>";
+        }
     }
 
     return "<!DOCTYPE html>
@@ -102,9 +111,9 @@ function emailTemplate(string $titulo, string $contenido, string $cta = '', stri
         </td></tr>
         <!-- Body -->
         <tr><td style='padding:32px'>
-          <h2 style='color:#1a1a2e;margin-top:0'>$titulo</h2>
-          $contenido
-          $ctaBlock
+          <h2 style='color:#1a1a2e;margin-top:0'>" . $titulo_safe . "</h2>
+          " . $contenido_safe . "
+          " . $ctaBlock . "
         </td></tr>
         <!-- Footer -->
         <tr><td style='background:#f9f9f9;padding:20px 32px;text-align:center;color:#999;font-size:12px;border-top:1px solid #eee'>
@@ -117,3 +126,4 @@ function emailTemplate(string $titulo, string $contenido, string $cta = '', stri
 </body>
 </html>";
 }
+?>

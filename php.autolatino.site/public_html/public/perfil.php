@@ -26,7 +26,11 @@ $success = '';
 
 // Procesar actualización de perfil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'update_profile') {
+    // Verificar CSRF token
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verificarCSRFToken($csrf_token)) {
+        $error = 'Token de seguridad inválido. Por favor, intenta de nuevo.';
+    } else if ($_POST['action'] === 'update_profile') {
         // Actualizar datos básicos
         $nombre = trim($_POST['nombre'] ?? '');
         $apellido = trim($_POST['apellido'] ?? '');

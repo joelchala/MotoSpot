@@ -289,11 +289,11 @@ include __DIR__ . '/../includes/navbar.php';
                     </div>
                     
                     <div class="contact-buttons">
-                        <?php if ($vehiculo['vendedor_telefono']): ?>
-                            <a href="tel:<?php echo $vehiculo['vendedor_telefono']; ?>" class="btn btn-contact btn-phone">
+                        <?php if ($vehiculo['vendedor_telefono'] && validarTelefono($vehiculo['vendedor_telefono'])): ?>
+                            <a href="tel:<?php echo htmlspecialchars($vehiculo['vendedor_telefono']); ?>" class="btn btn-contact btn-phone">
                                 <i class="fas fa-phone"></i> Llamar
                             </a>
-                            <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $vehiculo['vendedor_telefono']); ?>" 
+                            <a href="https://wa.me/<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $vehiculo['vendedor_telefono'])); ?>" 
                                target="_blank" class="btn btn-contact btn-whatsapp">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </a>

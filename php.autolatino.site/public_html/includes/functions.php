@@ -23,6 +23,18 @@ function getConfig($key, $default = null) {
 }
 
 /**
+ * Obtiene la conexión global a la base de datos
+ * @return PDO
+ */
+function getDB() {
+    global $pdo;
+    if (!isset($pdo)) {
+        throw new Exception("Base de datos no inicializada");
+    }
+    return $pdo;
+}
+
+/**
  * Función auxiliar para realizar consultas seguras
  * @param string $sql
  * @param array $params
@@ -194,5 +206,161 @@ function validarEnum($value, array $allowedValues) {
 function validarAno($year) {
     $year = intval($year ?? 0);
     return $year >= 1900 && $year <= date('Y') + 1;
+}
+?>
+/**
+ * Valida y sanitiza una URL interna (redirección segura)
+ * Solo permite rutas internas comenzando con /
+ * @param string $url
+ * @param array $allowed Rutas permitidas (whitelist)
+ * @return string URL validada o '/' por defecto
+ */
+function validarURL($url, $allowed = []) {
+    if (empty($url)) return '/';
+    
+    // Rechazar URLs con protocolo
+    if (strpos($url, '://') !== false) return '/';
+    
+    // Rechazar protocolo-relative URLs (//)
+    if (str_starts_with($url, '//')) return '/';
+    
+    // Debe empezar con /
+    if (!str_starts_with($url, '/')) return '/';
+    
+    // Si hay whitelist, validar contra ella
+    if (!empty($allowed)) {
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+        if (!in_array($parsedPath, $allowed, true)) {
+            return '/';
+        }
+    }
+    
+    return htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Valida un número de teléfono (formato básico)
+ * Permite: +34 123 456 7890, (123) 456-7890, 123.456.7890, 1234567890
+ * @param string $phone
+ * @return bool
+ */
+function validarTelefono($phone) {
+    // Remover espacios, guiones, puntos, paréntesis
+    $clean = preg_replace('/[\s\-().]+/', '', $phone ?? '');
+    
+    // Debe ser +XXX... o XXX...
+    // Mínimo 10 dígitos, máximo 15
+    return preg_match('/^\+?[0-9]{10,15}$/', $clean) === 1;
+}
+
+/**
+ * Valida una contraseña según políticas de seguridad
+ * @param string $password
+ * @param int $minLength Longitud mínima
+ * @return array ['valid' => bool, 'error' => string (opcional)]
+ */
+function validarPasswordSegura($password, $minLength = 12) {
+    if (strlen($password) < $minLength) {
+        return [
+            'valid' => false,
+            'error' => "Mínimo $minLength caracteres requeridos"
+        ];
+    }
+    
+    // Validar complejidad (al menos 3 de 4 criterios)
+    $criteria = [
+        'uppercase' => preg_match('/[A-Z]/', $password),
+        'lowercase' => preg_match('/[a-z]/', $password),
+        'numbers'   => preg_match('/[0-9]/', $password),
+        'special'   => preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password),
+    ];
+    
+    $passCount = array_sum($criteria);
+    if ($passCount < 3) {
+        return [
+            'valid' => false,
+            'error' => 'Debe incluir mayúsculas, minúsculas, números y caracteres especiales'
+        ];
+    }
+    
+    return ['valid' => true];
+}
+
+/**
+ * Obtiene el tipo MIME de un archivo de forma segura
+ * @param string $filepath
+ * @return string|false
+ */
+function getMimeType($filepath) {
+    // Preferir finfo (más seguro que mime_content_type deprecated)
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+        return $mime;
+    }
+    
+    // Fallback a mime_content_type si está disponible
+    if (function_exists('mime_content_type')) {
+        return mime_content_type($filepath);
+    }
+    
+    return false;
+}
+
+/**
+ * Genera un nombre de archivo seguro usando random_bytes
+ * @param string $originalName Nombre original del archivo
+ * @param array $allowedExt Extensiones permitidas ['jpg', 'png', ...]
+ * @return array ['valid' => bool, 'filename' => string (opcional), 'error' => string (opcional)]
+ */
+function generarNombreArchivoSeguro($originalName, $allowedExt = []) {
+    // Validar nombre no vacío
+    if (empty($originalName)) {
+        return ['valid' => false, 'error' => 'Nombre de archivo vacío'];
+    }
+    
+    // Obtener extensión
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    
+    // Validar extensión si hay whitelist
+    if (!empty($allowedExt) && !in_array($ext, $allowedExt, true)) {
+        return ['valid' => false, 'error' => "Extensión no permitida: $ext"];
+    }
+    
+    // Generar nombre seguro con random_bytes
+    $randomName = bin2hex(random_bytes(16));
+    $filename = $randomName . '.' . $ext;
+    
+    return ['valid' => true, 'filename' => $filename];
+}
+?>
+
+/**
+ * Polyfill para str_starts_with() - disponible en PHP 8.0+
+ * Soporta compatibilidad con PHP 7.x si es necesario
+ */
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return strpos($haystack, $needle) === 0;
+    }
+}
+
+/**
+ * Polyfill para str_ends_with() - disponible en PHP 8.0+
+ */
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        return strlen($needle) === 0 || strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
+    }
+}
+
+/**
+ * Polyfill para str_contains() - disponible en PHP 8.0+
+ */
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return strpos($haystack, $needle) !== false;
+    }
 }
 ?>

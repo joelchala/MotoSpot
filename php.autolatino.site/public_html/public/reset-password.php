@@ -57,8 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $valido) {
         $nueva    = $_POST['password']         ?? '';
         $confirma = $_POST['password_confirm'] ?? '';
 
-        if (strlen($nueva) < 8) {
-            $mensaje = 'La contraseña debe tener al menos 8 caracteres.';
+        // Validar contraseña con políticas mejoradas
+        $passValidation = validarPasswordSegura($nueva, 8);
+        if (!$passValidation['valid']) {
+            $mensaje = $passValidation['error'];
             $tipo    = 'error';
         } elseif ($nueva !== $confirma) {
             $mensaje = 'Las contraseñas no coinciden.';

@@ -56,9 +56,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'El correo electrónico no es válido';
     } elseif (empty($datos['telefono'])) {
         $error = 'El teléfono es obligatorio';
-    } elseif (strlen($password) < 6) {
-        $error = 'La contraseña debe tener al menos 6 caracteres';
-    } elseif ($password !== $password_confirm) {
+    } elseif (!validarTelefono($datos['telefono'])) {
+        $error = 'El teléfono no tiene un formato válido';
+    } else {
+        // Validar contraseña con políticas de seguridad mejoradas
+        $passValidation = validarPasswordSegura($password, 8);
+        if (!$passValidation['valid']) {
+            $error = $passValidation['error'];
+        }
+    }
+    
+    if (empty($error) && $password !== $password_confirm) {
         $error = 'Las contraseñas no coinciden';
     } elseif (!$terminos) {
         $error = 'Debes aceptar los términos y condiciones';
