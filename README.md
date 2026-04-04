@@ -3,7 +3,7 @@
 ![PHP Version](https://img.shields.io/badge/PHP-8.3+-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Beta%20v1.0-yellow?style=flat-square)
-![Bugs Fixed](https://img.shields.io/badge/Bugs%20Fixed-14%2F18-brightgreen?style=flat-square)
+![Bugs Fixed](https://img.shields.io/badge/Bugs%20Fixed-20%2F21-brightgreen?style=flat-square)
 
 > Plataforma moderna de compra y venta de vehículos y embarcaciones construida con PHP 8.3 puro (sin framework)
 
@@ -52,10 +52,15 @@
 
 ### 🔐 Seguridad
 - ✅ CSRF tokens en todos los formularios
-- ✅ Validación mejorada de entrada
+- ✅ Validación mejorada de entrada con funciones reutilizables
 - ✅ Cookies seguras (httponly, secure, samesite)
 - ✅ Prepared statements para prevenir SQL injection
 - ✅ Logging de eventos de seguridad
+- ✅ Protección contra open redirect attacks
+- ✅ Upload validation con MIME type checking
+- ✅ Password policy enforcement (OWASP standards)
+- ✅ Email injection prevention
+- ✅ Phone number validation
 
 ### 🎨 APIs Externas
 - ✅ Integración Unsplash para imágenes de vehículos
