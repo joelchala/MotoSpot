@@ -43,7 +43,7 @@ $orderBy = $sortMap[$sort] ?? 'v.destacado DESC, v.fecha_publicacion DESC';
 
 // Paginación
 $page = max(1, intval($_GET['page'] ?? 1));
-$perPage = 12;
+$perPage = 24;
 $offset = ($page - 1) * $perPage;
 
 // Construir consulta SQL (todas las tablas usan prefijo ms_)
@@ -373,13 +373,14 @@ include __DIR__ . '/../includes/navbar.php';
                                         </div>
                                     <?php endif; ?>
                                     <?php if ($vehiculo['destacado']): ?>
-                                        <span class="vehicle-badge vehicle-badge-featured">Destacado</span>
+                                        <span class="vehicle-badge vehicle-badge-featured vehicle-badge-tr">¡Destacado!</span>
                                     <?php endif; ?>
                                     <?php if ($vehiculo['condicion'] === 'nuevo'): ?>
                                         <span class="vehicle-badge vehicle-badge-new">0km</span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="vehicle-info">
+                                    <!-- Vista completa (detalle) -->
                                     <h3 class="vehicle-title"><?php echo htmlspecialchars($vehiculo['titulo']); ?></h3>
                                     <div class="vehicle-details">
                                         <span class="vehicle-year"><?php echo $vehiculo['ano']; ?></span>
@@ -399,9 +400,12 @@ include __DIR__ . '/../includes/navbar.php';
                                     <div class="vehicle-seller">
                                         <i class="fas fa-user"></i>
                                         <?php echo htmlspecialchars($vehiculo['nombre_agencia'] ?: $vehiculo['vendedor_nombre']); ?>
-                                        <?php if ($vehiculo['vendedor_tipo'] === 'agencia'): ?>
-                                            <span class="seller-badge">Agencia</span>
-                                        <?php endif; ?>
+                                    </div>
+                                    <!-- Vista compacta (listado) -->
+                                    <div class="vehicle-compact-info">
+                                        <span class="vci-year-brand"><?php echo $vehiculo['ano'].' '.htmlspecialchars($vehiculo['marca']); ?></span>
+                                        <span class="vci-model"><?php echo htmlspecialchars($vehiculo['modelo']); ?></span>
+                                        <span class="vci-price">US$ <?php echo number_format($vehiculo['precio']); ?></span>
                                     </div>
                                 </div>
                             </a>
