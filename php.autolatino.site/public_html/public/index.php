@@ -141,6 +141,38 @@ try {
 .btn-secondary:hover{background:rgba(255,255,255,.2)}
 .btn-large{padding:1rem 2.25rem;font-size:1.1rem}
 .btn-glow:hover{box-shadow:0 0 30px rgba(58,187,229,.5)}
+
+/* ── Responsive fixes móvil ── */
+@media (max-width: 768px) {
+    .navbar-menu { display:none; position:absolute; top:100%; left:0; right:0;
+        background:rgba(10,10,22,.98); backdrop-filter:blur(20px);
+        flex-direction:column; padding:1.5rem; gap:1rem;
+        border-top:1px solid rgba(255,255,255,.1); z-index:999; }
+    .navbar-menu.active { display:flex; }
+    .hero-stat-divider { display:none; }
+    .hero-stats { gap:1.5rem; padding:1.5rem 1rem; }
+    .hero-stat { flex:0 0 45%; }
+    .hero-content { padding:1.5rem .75rem; }
+    .hero-search { flex-direction:column; gap:.5rem; padding:.5rem; border-radius:12px; }
+    .hero-search-select { max-width:100%; border-right:none; border-bottom:1px solid rgba(255,255,255,.15); }
+    .hero-search-btn { width:100%; justify-content:center; }
+    .categories-grid { grid-template-columns:repeat(2,1fr); gap:.75rem; }
+    .category-card { height:150px; }
+    .category-card-label { font-size:1rem; }
+    .features-grid { grid-template-columns:1fr; }
+    .presentation-grid { grid-template-columns:1fr; }
+    .presentation-image { order:-1; margin-bottom:1.5rem; }
+    .footer-grid { grid-template-columns:1fr; gap:2rem; }
+    .footer-bottom { flex-direction:column; text-align:center; gap:.5rem; }
+    .section-title { font-size:clamp(1.5rem,5vw,2.2rem); }
+    .hero-title { font-size:clamp(2rem,7vw,3.5rem); letter-spacing:-1px; }
+    .hero-subtitle { font-size:1rem; }
+}
+@media (max-width: 400px) {
+    .categories-grid { grid-template-columns:1fr; }
+    .hero-stat { flex:0 0 100%; }
+    .hero-cta .btn { max-width:100%; }
+}
 </style>
 </head>
 <body>
@@ -159,7 +191,7 @@ try {
             <a href="#videos"        class="nav-link">Videos</a>
             <a href="#como-funciona" class="nav-link">Como funciona</a>
             <a href="/planes.php"    class="nav-link"><i class="fas fa-crown" style="color:#f59e0b;margin-right:.3rem"></i>Planes</a>
-            <a href="/publicar-vehiculo.php" class="nav-link nav-cta">Publicar gratis</a>
+            <a href="/publicar-vehiculo.php" class="nav-link nav-cta">Publicar</a>
         </div>
         <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
@@ -295,6 +327,35 @@ try {
     </div>
 </div>
 
+<!-- BENEFICIOS -->
+<section class="section" id="beneficios">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <span class="section-label">Beneficios</span>
+            <h2 class="section-title">Por que elegir MotoSpot?</h2>
+            <p class="section-subtitle">Las mejores herramientas para que compres o vendas rapido y seguro.</p>
+        </div>
+        <div class="features-grid">
+            <?php
+            $features = [
+                ['icon'=>'fa-shield-alt',  'title'=>'Seguridad garantizada',   'text'=>'Verificamos todos los usuarios y ofrecemos consejos de seguridad para transacciones seguras.', 'delay'=>100],
+                ['icon'=>'fa-camera',      'title'=>'Hasta 20 fotos',          'text'=>'Mostra tu vehiculo con fotos de alta calidad. Mas fotos = mas interesados.',                  'delay'=>200],
+                ['icon'=>'fa-chart-line',  'title'=>'Maxima visibilidad',      'text'=>'Tu publicacion llega a miles de compradores potenciales en toda Argentina.',              'delay'=>300],
+                ['icon'=>'fa-bolt',        'title'=>'Publicacion instantanea', 'text'=>'Crea tu anuncio en menos de 5 minutos y empeza a recibir consultas de inmediato.',           'delay'=>400],
+                ['icon'=>'fa-mobile-alt',  'title'=>'100% responsive',         'text'=>'Accede desde cualquier dispositivo. Nuestra plataforma se adapta a tu pantalla.',            'delay'=>500],
+                ['icon'=>'fa-headset',     'title'=>'Soporte 24/7',            'text'=>'Nuestro equipo esta disponible para ayudarte en todo momento.',                               'delay'=>600],
+            ];
+            foreach ($features as $f): ?>
+            <div class="feature-card" data-aos="fade-up" data-aos-delay="<?= $f['delay'] ?>">
+                <div class="feature-icon"><i class="fas <?= $f['icon'] ?>"></i></div>
+                <h3 class="feature-title"><?= $f['title'] ?></h3>
+                <p class="feature-text"><?= $f['text'] ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
 <!-- COMO FUNCIONA -->
 <section class="section presentation" id="como-funciona">
     <div class="container">
@@ -326,35 +387,6 @@ try {
     </div>
 </section>
 
-<!-- BENEFICIOS -->
-<section class="section" id="beneficios">
-    <div class="container">
-        <div class="section-header" data-aos="fade-up">
-            <span class="section-label">Beneficios</span>
-            <h2 class="section-title">Por que elegir MotoSpot?</h2>
-            <p class="section-subtitle">Las mejores herramientas para que compres o vendas rapido y seguro.</p>
-        </div>
-        <div class="features-grid">
-            <?php
-            $features = [
-                ['icon'=>'fa-shield-alt',  'title'=>'Seguridad garantizada',   'text'=>'Verificamos todos los usuarios y ofrecemos consejos de seguridad para transacciones seguras.', 'delay'=>100],
-                ['icon'=>'fa-camera',      'title'=>'Hasta 20 fotos',          'text'=>'Mostra tu vehiculo con fotos de alta calidad. Mas fotos = mas interesados.',                  'delay'=>200],
-                ['icon'=>'fa-chart-line',  'title'=>'Maxima visibilidad',      'text'=>'Tu publicacion llega a miles de compradores potenciales en toda Latinoamerica.',              'delay'=>300],
-                ['icon'=>'fa-bolt',        'title'=>'Publicacion instantanea', 'text'=>'Crea tu anuncio en menos de 5 minutos y empeza a recibir consultas de inmediato.',           'delay'=>400],
-                ['icon'=>'fa-mobile-alt',  'title'=>'100% responsive',         'text'=>'Accede desde cualquier dispositivo. Nuestra plataforma se adapta a tu pantalla.',            'delay'=>500],
-                ['icon'=>'fa-headset',     'title'=>'Soporte 24/7',            'text'=>'Nuestro equipo esta disponible para ayudarte en todo momento.',                               'delay'=>600],
-            ];
-            foreach ($features as $f): ?>
-            <div class="feature-card" data-aos="fade-up" data-aos-delay="<?= $f['delay'] ?>">
-                <div class="feature-icon"><i class="fas <?= $f['icon'] ?>"></i></div>
-                <h3 class="feature-title"><?= $f['title'] ?></h3>
-                <p class="feature-text"><?= $f['text'] ?></p>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-
 <!-- CTA FINAL -->
 <section class="section cta-section" id="contacto">
     <div class="container">
@@ -376,7 +408,7 @@ try {
                 <a href="/" class="brand-logo footer-logo">
                     <div class="brand-logo-text"><span class="brand-logo-moto">MOTO</span><span class="brand-logo-spot">SPOT</span><span class="brand-logo-tm">TM</span></div>
                 </a>
-                <p class="footer-description">La plataforma lider en Latinoamerica para la compra y venta de vehiculos y embarcaciones.</p>
+                <p class="footer-description">La plataforma líder en Argentina para la compra y venta de vehículos y embarcaciones.</p>
                 <div class="footer-social">
                     <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -416,7 +448,7 @@ try {
         </div>
         <div class="footer-bottom">
             <p>&copy; <?= date('Y') ?> MotoSpot. Todos los derechos reservados.</p>
-            <p>Hecho con <i class="fas fa-heart" style="color:#ef4444"></i> en Latinoamerica</p>
+            <p>Hecho con <i class="fas fa-heart" style="color:#ef4444"></i> en Argentina</p>
         </div>
     </div>
 </footer>
@@ -429,8 +461,11 @@ const navbar=document.getElementById('navbar');
 window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',window.scrollY>80));
 
 document.getElementById('menuToggle').addEventListener('click',()=>{
-    const m=document.querySelector('.navbar-menu');
-    m.style.display=m.style.display==='flex'?'none':'flex';
+    document.querySelector('.navbar-menu').classList.toggle('active');
+});
+// Cerrar menu al hacer click en un link
+document.querySelectorAll('.navbar-menu .nav-link').forEach(l=>{
+    l.addEventListener('click',()=>document.querySelector('.navbar-menu').classList.remove('active'));
 });
 
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
