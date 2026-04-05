@@ -429,3 +429,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 **Última Actualización:** 04 de Abril, 2026  
 **Versión:** 1.0  
 **Estado:** ✅ Implementado en 5 formularios
+
+---
+
+## ⚠️ ACTUALIZACIÓN 2026-04-04 — Vulnerabilidades CSRF Detectadas
+
+### Formularios SIN Protección CSRF
+
+| Archivo | Formulario | Riesgo |
+|---------|-----------|--------|
+| `mis-publicaciones.php` | Pausar/Activar publicaciones | **CRÍTICO** — Atacante puede cambiar estado de publicaciones ajenas |
+| `recuperar-password.php` | Solicitar reset de contraseña | **CRÍTICO** — Email bombing, reset no autorizado |
+
+### Implementación Recomendada para mis-publicaciones.php
+
+```php
+// Agregar al inicio del bloque POST (línea 18):
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'], $_POST['vehiculo_id'])) {
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verificarCSRFToken($csrf_token)) {
+        header('Location: /mis-publicaciones.php');
+        exit();
+    }
+    // ... resto del procesamiento
+}
+```
+
+Y en cada formulario HTML:
+```html
+<input type="hidden" name="csrf_token" value="<?= generarCSRFToken() ?>">
+```
+
+### Implementación Recomendada para recuperar-password.php
+
+```php
+// Agregar verificación después de la línea 21:
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verificarCSRFToken($csrf_token)) {
+        $mensaje = 'Token de seguridad inválido. Intente nuevamente.';
+        $tipo = 'error';
+    } else {
+        // ... procesar email
+    }
+}
+```
+
+### Mejora Recomendada: Token por Formulario
+
+El sistema actual usa un token único por sesión. Para mayor seguridad, implementar tokens por formulario con timestamp:
+
+```php
+function generarFormToken(string $formId): string {
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['form_tokens'][$formId] = [
+        'token' => $token,
+        'expires' => time() + 3600
+    ];
+    return $token;
+}
+
+function verificarFormToken(string $formId, string $token): bool {
+    $stored = $_SESSION['form_tokens'][$formId] ?? null;
+    if (!$stored || $stored['expires'] < time()) return false;
+    $valid = hash_equals($stored['token'], $token);
+    unset($_SESSION['form_tokens'][$formId]); // Un solo uso
+    return $valid;
+}
+```
+
+### Estado Actual de Cobertura CSRF
+
+| Formulario | Token Presente | Verificación | Estado |
+|-----------|---------------|-------------|--------|
+| login.php | ✅ | ✅ | ✅ OK |
+| register.php | ✅ | ✅ | ✅ OK |
+| publicar-vehiculo.php | ✅ | ✅ | ✅ OK |
+| perfil.php (ambos) | ✅ | ✅ | ✅ OK |
+| planes.php | ✅ | ✅ | ✅ OK |
+| admin-codigos.php | ✅ | ✅ | ✅ OK |
+| reset-password.php | ✅ | ✅ | ✅ OK |
+| detalle-vehiculo.php (contacto) | ✅ | ✅ | ✅ OK |
+| **mis-publicaciones.php** | ❌ | ❌ | **🔴 VULNERABLE** |
+| **recuperar-password.php** | ❌ | ❌ | **🔴 VULNERABLE** |
+
+**Cobertura:** 8/10 formularios protegidos (80%)  
+**Pendientes:** 2 formularios críticos sin protección
+
+---
+
+*Última actualización: 2026-04-04 — Revisión Exhaustiva*

@@ -39,15 +39,21 @@ $whereClause = implode(' AND ', $where);
 $total       = fetchOne("SELECT COUNT(*) as total FROM ms_vehiculos v WHERE $whereClause", $params)['total'] ?? 0;
 $totalPages  = ceil($total / $perPage);
 
+// LIMIT/OFFSET parametrizados para evitar SQL injection
+$sqlParams   = $params;
+$sqlParams[] = $perPage;
+$sqlParams[] = $offset;
+
 $sql = "SELECT v.*, u.nombre as vendedor_nombre, u.nombre_agencia,
-        (SELECT url_foto FROM ms_vehiculo_fotos WHERE vehiculo_id = v.id AND es_principal = 1 LIMIT 1) as foto_principal
+        f.url_foto as foto_principal
         FROM ms_vehiculos v
         JOIN ms_usuarios u ON v.usuario_id = u.id
+        LEFT JOIN ms_vehiculo_fotos f ON f.vehiculo_id = v.id AND f.es_principal = 1
         WHERE $whereClause
         ORDER BY v.destacado DESC, v.fecha_publicacion DESC
-        LIMIT $perPage OFFSET $offset";
+        LIMIT ? OFFSET ?";
 
-$embarcaciones = fetchAll($sql, $params);
+$embarcaciones = fetchAll($sql, $sqlParams);
 
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/navbar.php';
@@ -117,10 +123,11 @@ include __DIR__ . '/../includes/navbar.php';
                             </a>
                         <?php endif; ?>
                         <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                            <<?php echo $i === $page ? 'span' : 'a href="?tipo=' . urlencode($tipo) . '&page=' . $i . '"'; ?>
-                               class="page-link <?php echo $i === $page ? 'active' : ''; ?>">
-                                <?php echo $i; ?>
-                            </<?php echo $i === $page ? 'span' : 'a'; ?>>
+                            <?php if ($i === $page): ?>
+                                <span class="page-link active"><?php echo $i; ?></span>
+                            <?php else: ?>
+                                <a href="?tipo=<?php echo urlencode($tipo); ?>&page=<?php echo $i; ?>" class="page-link"><?php echo $i; ?></a>
+                            <?php endif; ?>
                         <?php endfor; ?>
                         <?php if ($page < $totalPages): ?>
                             <a href="?tipo=<?php echo urlencode($tipo); ?>&page=<?php echo $page + 1; ?>" class="page-link">

@@ -11,6 +11,9 @@
 // Cargar variables de entorno (requerido para env())
 require_once __DIR__ . '/env.php';
 
+// Sistema de logs
+require_once __DIR__ . '/logger.php';
+
 if (!defined('MOTOSPOT_STOCK_MEDIA')) {
     define('MOTOSPOT_STOCK_MEDIA', true);
 }
@@ -70,7 +73,7 @@ function stockHttpGet(string $url, array $headers = []): ?array
         }
         
         if ($httpCode !== 200) {
-            logger('warning', 'API returned non-200 status', ['url' => $url, 'status' => $httpCode]);
+            logWarning('API returned non-200 status', ['url' => $url, 'status' => $httpCode]);
             return null;
         }
         
@@ -85,7 +88,7 @@ function stockHttpGet(string $url, array $headers = []): ?array
         
         return $decoded;
     } catch (Exception $e) {
-        logger('error', 'API request failed', ['url' => $url, 'error' => $e->getMessage()]);
+        logError('API request failed', ['url' => $url, 'error' => $e->getMessage()]);
         return null;
     }
 }
@@ -307,25 +310,25 @@ function stockSearch(string $query, int $limit = 12, array $sources = ['unsplash
             $unsplashResults = unsplashSearch($query, $perSource);
             $results = array_merge($results, $unsplashResults);
         } catch (Exception $e) {
-            logger('warning', 'Unsplash API failed', ['query' => $query, 'error' => $e->getMessage()]);
+            logWarning('Unsplash API failed', ['query' => $query, 'error' => $e->getMessage()]);
         }
     }
-    
+
     if (in_array('pexels', $sources)) {
         try {
             $pexelsResults = pexelsSearch($query, $perSource);
             $results = array_merge($results, $pexelsResults);
         } catch (Exception $e) {
-            logger('warning', 'Pexels API failed', ['query' => $query, 'error' => $e->getMessage()]);
+            logWarning('Pexels API failed', ['query' => $query, 'error' => $e->getMessage()]);
         }
     }
-    
+
     if (in_array('pixabay', $sources)) {
         try {
             $pixabayResults = pixabaySearchImages($query, $perSource);
             $results = array_merge($results, $pixabayResults);
         } catch (Exception $e) {
-            logger('warning', 'Pixabay API failed', ['query' => $query, 'error' => $e->getMessage()]);
+            logWarning('Pixabay API failed', ['query' => $query, 'error' => $e->getMessage()]);
         }
     }
 

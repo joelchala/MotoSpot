@@ -15,19 +15,31 @@ require_once __DIR__ . '/../includes/functions.php';
 
 // Parámetros de filtro
 $filtros = [
-    'marca' => $_GET['marca'] ?? '',
-    'modelo' => $_GET['modelo'] ?? '',
-    'ano_desde' => $_GET['ano_desde'] ?? '',
-    'ano_hasta' => $_GET['ano_hasta'] ?? '',
+    'q'          => trim($_GET['q'] ?? ''),
+    'marca'      => $_GET['marca'] ?? '',
+    'modelo'     => $_GET['modelo'] ?? '',
+    'ano_desde'  => $_GET['ano_desde'] ?? '',
+    'ano_hasta'  => $_GET['ano_hasta'] ?? '',
     'precio_min' => $_GET['precio_min'] ?? '',
     'precio_max' => $_GET['precio_max'] ?? '',
-    'tipo' => $_GET['tipo'] ?? '',
-    'condicion' => $_GET['condicion'] ?? '',
-    'transmision' => $_GET['transmision'] ?? '',
-    'combustible' => $_GET['combustible'] ?? '',
-    'ciudad' => $_GET['ciudad'] ?? '',
-    'destacados' => isset($_GET['destacados']) ? true : false
+    'tipo'       => $_GET['tipo'] ?? '',
+    'condicion'  => $_GET['condicion'] ?? '',
+    'transmision'=> $_GET['transmision'] ?? '',
+    'combustible'=> $_GET['combustible'] ?? '',
+    'ciudad'     => $_GET['ciudad'] ?? '',
+    'destacados' => isset($_GET['destacados']) ? true : false,
 ];
+
+// Ordenamiento con whitelist (evita SQL injection)
+$sortMap = [
+    'precio_asc'  => 'v.precio ASC',
+    'precio_desc' => 'v.precio DESC',
+    'ano_desc'    => 'v.ano DESC',
+    'ano_asc'     => 'v.ano ASC',
+    'reciente'    => 'v.fecha_publicacion DESC',
+];
+$sort    = $_GET['sort'] ?? '';
+$orderBy = $sortMap[$sort] ?? 'v.destacado DESC, v.fecha_publicacion DESC';
 
 // Paginación
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -87,6 +99,14 @@ if ($filtros['destacados']) {
     $where[] = "v.destacado = 1";
 }
 
+// Búsqueda por texto libre (q)
+if (!empty($filtros['q'])) {
+    $where[]  = "(v.titulo LIKE ? OR v.marca LIKE ? OR v.modelo LIKE ?)";
+    $params[] = '%' . $filtros['q'] . '%';
+    $params[] = '%' . $filtros['q'] . '%';
+    $params[] = '%' . $filtros['q'] . '%';
+}
+
 $whereClause = implode(' AND ', $where);
 
 // Contar total de resultados
@@ -94,16 +114,21 @@ $countSql = "SELECT COUNT(*) as total FROM ms_vehiculos v WHERE $whereClause";
 $totalResultados = fetchOne($countSql, $params)['total'] ?? 0;
 $totalPages = ceil($totalResultados / $perPage);
 
-// Obtener vehículos
+// Obtener vehículos — LIMIT/OFFSET parametrizados para evitar SQL injection
+$sqlParams   = $params;
+$sqlParams[] = $perPage;
+$sqlParams[] = $offset;
+
 $sql = "SELECT v.*, u.nombre as vendedor_nombre, u.nombre_agencia, u.tipo as vendedor_tipo, u.telefono as vendedor_telefono,
-        (SELECT url_foto FROM ms_vehiculo_fotos WHERE vehiculo_id = v.id AND es_principal = 1 LIMIT 1) as foto_principal
+        f.url_foto as foto_principal
         FROM ms_vehiculos v
         JOIN ms_usuarios u ON v.usuario_id = u.id
+        LEFT JOIN ms_vehiculo_fotos f ON f.vehiculo_id = v.id AND f.es_principal = 1
         WHERE $whereClause
-        ORDER BY v.destacado DESC, v.fecha_publicacion DESC
-        LIMIT $perPage OFFSET $offset";
+        ORDER BY $orderBy
+        LIMIT ? OFFSET ?";
 
-$vehiculos = fetchAll($sql, $params);
+$vehiculos = fetchAll($sql, $sqlParams);
 
 // Opciones para filtros
 $marcas = fetchAll("SELECT DISTINCT marca FROM ms_vehiculos WHERE estado_publicacion = 'activo' ORDER BY marca");

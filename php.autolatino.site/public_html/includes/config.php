@@ -9,6 +9,9 @@ if (!defined('MOTO_SPOT')) {
     define('MOTO_SPOT', true);
 }
 
+// Cargar variables de entorno (necesario para credenciales de DB)
+require_once __DIR__ . '/env.php';
+
 return [
     // Información del Sitio
     'site_name' => 'MotoSpot',
@@ -25,10 +28,10 @@ return [
     'country' => 'Argentina',
     
     // Base de Datos
-    'db_host' => 'srv547.hstgr.io',
-    'db_name' => 'u986675534_moto',
-    'db_user' => 'u986675534_spot',
-    'db_pass' => 'AKKuDQ&l~9d',
+    'db_host' => env('DB_HOST', 'localhost'),
+    'db_name' => env('DB_NAME'),
+    'db_user' => env('DB_USER'),
+    'db_pass' => env('DB_PASS'),
     'db_prefix' => 'ms_',
     'db_charset' => 'utf8mb4',
     
@@ -36,7 +39,7 @@ return [
     'installed' => true,
     'install_date' => '2026-03-28',
     'session_lifetime' => 7200,
-    'cookie_secure' => false,
+    'cookie_secure' => env('APP_ENV') === 'production' || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'),
     'cookie_httponly' => true,
     
     // Funcionalidades

@@ -480,3 +480,71 @@ if (!function_exists('str_starts_with')) {
 **Documento Actualizado:** 04 de Abril, 2026  
 **Responsable:** Copilot CLI - MotoSpot Session  
 **Versión:** 2.0 - Post-Repairs
+
+---
+
+## 🆕 BUGS DETECTADOS EN REVISIÓN EXHAUSTIVA (2026-04-04 v3)
+
+### BUG-NUEVO-01: reset-password.php No Renderiza en GET [CRÍTICO]
+**Archivo:** `public/reset-password.php:50-92`  
+**Problema:** Falta `}` para cerrar el bloque `if ($_SERVER['REQUEST_METHOD'] === 'POST')`. Las líneas 93+ (`$pageTitle`, `include header/navbar/footer`) quedan DENTRO del if.  
+**Síntoma:** La página de reset muestra el formulario en POST pero no renderiza correctamente en GET con token válido.  
+**Corrección:** Agregar `}` antes de la línea 93.
+
+### BUG-NUEVO-02: login.php Estructura de Llaves Desbalanceada [CRÍTICO]
+**Archivo:** `public/login.php` (alrededor de línea 40-60)  
+**Problema:** Las llaves del if/else del CSRF check están desbalanceadas.  
+**Síntoma:** Posible ejecución de código de login cuando CSRF falla.  
+**Corrección:** Revisar y balancear todas las llaves del bloque POST.
+
+### BUG-NUEVO-03: Búsqueda del Hero Ignorada por Backend [ALTO]
+**Archivo:** `public/index.php:201` (envía `q`), `public/listado-vehiculos.php` (no lee `q`)  
+**Problema:** El campo de búsqueda del hero envía `?q=...` pero el backend nunca procesa este parámetro.  
+**Síntoma:** El usuario escribe "Toyota", presiona buscar, y ve TODOS los vehículos.  
+**Corrección:** Agregar procesamiento de `$_GET['q']` en `listado-vehiculos.php`.
+
+### BUG-NUEVO-04: Ordenamiento de Resultados No Funciona [ALTO]
+**Archivo:** `public/listado-vehiculos.php:298-304` (frontend envía `sort`), backend (ignora `sort`)  
+**Problema:** JavaScript agrega `?sort=precio_asc` pero el backend nunca lee `$_GET['sort']`. ORDER BY siempre es `v.destacado DESC, v.fecha_publicacion DESC`.  
+**Síntoma:** El usuario cambia el dropdown de orden pero los resultados no cambian.  
+**Corrección:** Leer `$_GET['sort']` y aplicar ORDER BY dinámico (con whitelist).
+
+### BUG-NUEVO-05: OAuth Pérdida de Privilegios Admin [CRÍTICO]
+**Archivos:** `public/auth-google-token.php:126-131`, `public/oauth-google.php:62-66`  
+**Problema:** Session de OAuth establece solo 4-5 variables. No establece `usuario_rol`.  
+**Síntoma:** Un admin que inicie sesión con Google pierde acceso al panel de admin.  
+**Corrección:** Usar `crearSesionUsuario($usuario)` en ambos endpoints.
+
+### BUG-NUEVO-06: Perfil Acepta Contraseñas Débiles [MEDIO]
+**Archivo:** `public/perfil.php:88`  
+**Problema:** Acepta 6 caracteres sin complejidad. Registro exige 8+ con complejidad.  
+**Síntoma:** Usuario puede cambiar a contraseña "123456".  
+**Corrección:** Usar `validarPasswordSegura()` en perfil.php.
+
+### BUG-NUEVO-07: Mis-publicaciones Sin CSRF [CRÍTICO]
+**Archivo:** `public/mis-publicaciones.php:18-43`  
+**Problema:** Formularios de pausar/activar no tienen token CSRF.  
+**Síntoma:** Atacante puede pausar publicaciones de usuarios via CSRF.  
+**Corrección:** Agregar campo CSRF y verificación en POST.
+
+### BUG-NUEVO-08: recuperar-password.php Sin CSRF [CRÍTICO]
+**Archivo:** `public/recuperar-password.php:21-76`  
+**Problema:** Formulario de recuperación sin token CSRF.  
+**Síntoma:** Email bombing posible.  
+**Corrección:** Agregar campo CSRF y verificación.
+
+### BUG-NUEVO-09: health.php Token Hardcodeado [ALTO]
+**Archivo:** `public/health.php:14`  
+**Problema:** Token `ms_check_2026` visible en código fuente.  
+**Síntoma:** Cualquiera con acceso al código puede ver información del servidor.  
+**Corrección:** Mover a `.env`.
+
+### BUG-NUEVO-10: Contactar Sin Límite de Longitud [MEDIO]
+**Archivo:** `public/contactar.php:29-36`  
+**Problema:** Solo verifica que mensaje no esté vacío, sin longitud máxima.  
+**Síntoma:** Mensajes de 10MB+ pueden insertarse en BD.  
+**Corrección:** Agregar `validarString($mensaje, 10, 2000)`.
+
+---
+
+*Última actualización: 2026-04-04 v3 — Revisión Exhaustiva*

@@ -23,6 +23,9 @@ require_once __DIR__ . '/db.php';
 // Incluir funciones auxiliares
 require_once __DIR__ . '/functions.php';
 
+// Incluir sistema de logs
+require_once __DIR__ . '/logger.php';
+
 /**
  * Verifica si el usuario está autenticado
  * @return bool
@@ -82,7 +85,7 @@ function login($email, $password) {
     if (!$usuario) {
         return [
             'success' => false,
-            'message' => 'El correo electrónico no está registrado',
+            'message' => 'Correo electrónico o contraseña incorrectos',
             'user' => null
         ];
     }
@@ -91,7 +94,7 @@ function login($email, $password) {
     if (!password_verify($password, $usuario['password'])) {
         return [
             'success' => false,
-            'message' => 'La contraseña es incorrecta',
+            'message' => 'Correo electrónico o contraseña incorrectos',
             'user' => null
         ];
     }
@@ -229,7 +232,9 @@ function requerirAutenticacion($redirectUrl = '') {
     if (!estaAutenticado()) {
         $loginUrl = '/login.php';
         if (!empty($redirectUrl)) {
-            $loginUrl .= '?redirect=' . urlencode($redirectUrl);
+            // Validar que la URL sea interna para evitar open redirect
+            $safeRedirect = validarURL($redirectUrl);
+            $loginUrl .= '?redirect=' . urlencode($safeRedirect);
         }
         header("Location: $loginUrl");
         exit();
@@ -274,5 +279,5 @@ function verificarCSRFToken($token) {
 function regenerarSesion() {
     // Regenerar ID evitando session fixation attacks
     session_regenerate_id(true);
-    logger('info', 'Session ID regenerated for security', ['user_id' => $_SESSION['usuario_id'] ?? null]);
+    logInfo('Session ID regenerated for security', ['user_id' => $_SESSION['usuario_id'] ?? null]);
 }

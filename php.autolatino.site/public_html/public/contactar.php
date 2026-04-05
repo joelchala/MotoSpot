@@ -31,7 +31,7 @@ $nombre    = trim($_POST['nombre']  ?? '');
 $email     = trim($_POST['email']   ?? '');
 $telefono  = trim($_POST['telefono'] ?? '');
 
-if (empty($mensaje)) {
+if (!validarString($mensaje, 10, 2000)) {
     header("Location: /detalle-vehiculo.php?id=$vehiculoId&error=mensaje_vacio");
     exit();
 }

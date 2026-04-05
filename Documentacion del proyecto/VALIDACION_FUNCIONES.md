@@ -418,3 +418,78 @@ echo "✅ Todas las pruebas pasaron\n";
 **Documento Creado:** 04 de Abril, 2026  
 **Última Actualización:** 04 de Abril, 2026  
 **Versión:** 1.0
+
+---
+
+## ⚠️ ACTUALIZACIÓN 2026-04-04 — Estado de Funciones de Validación
+
+### Problema Crítico Detectado
+
+Las funciones de validación definidas DESPUÉS del primer cierre `?>` en `functions.php` **NO se ejecutan como PHP**. Se tratan como texto HTML de salida.
+
+**Funciones afectadas (código muerto):**
+- `validarURL()` — Usada en `login.php` para validar redirecciones
+- `validarTelefono()` — Usada en `register.php` y `detalle-vehiculo.php`
+- `validarPasswordSegura()` — Usada en `register.php` y `reset-password.php`
+- `getMimeType()` — Usada en `publicar-vehiculo.php` para uploads
+- `generarNombreArchivoSeguro()` — Usada en `publicar-vehiculo.php` para uploads
+- Polyfills: `str_starts_with()`, `str_ends_with()`, `str_contains()`
+
+**Impacto:** Fatal Error si alguna página llama a estas funciones. Si el include renderiza como HTML, el código se imprime en la página visible.
+
+### Funciones que SÍ funcionan (definidas antes del primer `?>`):
+
+| Función | Estado | Usada en |
+|---------|--------|----------|
+| `getConfig()` | ✅ OK | functions.php |
+| `getDB()` | ✅ OK | Múltiples |
+| `query()` | ✅ OK | Múltiples |
+| `fetchOne()` | ✅ OK | Múltiples |
+| `fetchAll()` | ✅ OK | Múltiples |
+| `e()` | ✅ OK | Múltiples |
+| `slugify()` | ✅ OK | No usada actualmente |
+| `executeQuery()` | ✅ OK | Múltiples |
+| `getLastInsertId()` | ✅ OK | publicar-vehiculo.php |
+| `beginTransaction()` | ✅ OK | publicar-vehiculo.php |
+| `commitTransaction()` | ✅ OK | publicar-vehiculo.php |
+| `rollbackTransaction()` | ✅ OK | publicar-vehiculo.php |
+| `validarString()` | ✅ OK | publicar-vehiculo.php |
+| `validarInt()` | ✅ OK | Disponible |
+| `validarFloat()` | ✅ OK | publicar-vehiculo.php |
+| `validarEmail()` | ✅ OK | register.php |
+| `validarEnum()` | ✅ OK | publicar-vehiculo.php |
+| `validarAno()` | ✅ OK | publicar-vehiculo.php |
+
+### Funciones que NO funcionan (después del `?>`):
+
+| Función | Estado | Usada en | Riesgo |
+|---------|--------|----------|--------|
+| `validarURL()` | ❌ CÓDIGO MUERTO | login.php | Fatal Error |
+| `validarTelefono()` | ❌ CÓDIGO MUERTO | register.php | Fatal Error |
+| `validarPasswordSegura()` | ❌ CÓDIGO MUERTO | register.php, reset-password.php | Fatal Error |
+| `getMimeType()` | ❌ CÓDIGO MUERTO | publicar-vehiculo.php | Fatal Error |
+| `generarNombreArchivoSeguro()` | ❌ CÓDIGO MUERTO | publicar-vehiculo.php | Fatal Error |
+| `str_starts_with()` polyfill | ❌ CÓDIGO MUERTO | env.php, image.php | N/A (PHP 8.3 nativo) |
+| `str_ends_with()` polyfill | ❌ CÓDIGO MUERTO | No usado | N/A |
+| `str_contains()` polyfill | ❌ CÓDIGO MUERTO | No usado | N/A |
+
+### Corrección Requerida
+
+Eliminar TODOS los cierres `?>` intermedios en `functions.php`. El archivo debe:
+1. Empezar con `<?php`
+2. NO tener `?>` intermedios
+3. Terminar SIN `?>` (convención PSR-12)
+
+### Refactoring Recomendado
+
+1. **Eliminar polyfills innecesarios:** PHP 8.3 ya tiene `str_starts_with()`, `str_ends_with()`, `str_contains()` nativamente.
+
+2. **Mover funciones de validación a archivo separado:** Crear `includes/validation.php` con todas las funciones de validación para mejor organización.
+
+3. **Unificar nomenclatura:** Usar consistentemente `validar*` en español o `validate*` en inglés.
+
+4. **Agregar type hints PHP 8:** Todas las funciones deberían usar tipos de retorno y parámetros tipados.
+
+---
+
+*Última actualización: 2026-04-04 — Revisión Exhaustiva*

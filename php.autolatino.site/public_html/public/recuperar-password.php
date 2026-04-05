@@ -19,6 +19,10 @@ $tipo    = '';
 $email   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verificarCSRFToken($_POST['csrf_token'] ?? '')) {
+        $mensaje = 'Token de seguridad inválido. Intenta nuevamente.';
+        $tipo    = 'error';
+    } else {
     $email = trim($_POST['email'] ?? '');
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -73,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mensaje = 'Ocurrió un error. Intenta nuevamente en unos minutos.';
             $tipo    = 'error';
         }
-    }
-}
+    } // fin else CSRF válido
+} // fin if POST
 
 $pageTitle = 'Recuperar contraseña';
 include __DIR__ . '/../includes/header.php';
@@ -122,6 +126,7 @@ include __DIR__ . '/../includes/navbar.php';
 
             <?php if ($tipo !== 'success'): ?>
             <form method="POST" action="/recuperar-password.php">
+                <input type="hidden" name="csrf_token" value="<?= generarCSRFToken() ?>">
                 <div class="form-group">
                     <label for="email"><i class="fas fa-envelope" style="margin-right:.4rem;color:#3ABBE5"></i>Correo electrónico</label>
                     <input type="email" id="email" name="email" class="form-control"

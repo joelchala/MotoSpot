@@ -14,7 +14,7 @@ function getHeroVideo(): array {
         usort($v, fn($a,$b) => $b['width']-$a['width']);
         return ['url'=>$v[0]['url_large']?:$v[0]['url_medium'], 'thumb'=>$v[0]['url_thumb']];
     } catch (Exception $e) {
-        logger('error', 'Error fetching hero video', ['error' => $e->getMessage()]);
+        logError('Error fetching hero video', ['error' => $e->getMessage()]);
         return ['url'=>'','thumb'=>''];
     }
 }
@@ -44,7 +44,7 @@ try {
     }
     $allVideos = array_slice($allVideos, 0, 6);
 } catch (Exception $e) {
-    logger('warning', 'Error fetching featured videos', ['error' => $e->getMessage()]);
+    logWarning('Error fetching featured videos', ['error' => $e->getMessage()]);
     $allVideos = []; // fallback: no videos
 }
 ?>
@@ -317,7 +317,7 @@ try {
                         $presUrl = $presImg[0]['url_regular'];
                     }
                 } catch (Exception $e) {
-                    logger('warning', 'Error fetching presentation image', ['error' => $e->getMessage()]);
+                    logWarning('Error fetching presentation image', ['error' => $e->getMessage()]);
                 }
                 ?>
                 <img src="<?= htmlspecialchars($presUrl) ?>" alt="Venta de vehiculos" style="width:100%;height:auto;border-radius:16px;">

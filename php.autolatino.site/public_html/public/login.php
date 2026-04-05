@@ -43,8 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 header("Location: $redirect");
                 exit();
-        } else {
-            $error = $resultado['message'];
+            } else {
+                $error = $resultado['message'];
+            }
         }
     }
 }

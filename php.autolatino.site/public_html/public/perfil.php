@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $apellido = trim($_POST['apellido'] ?? '');
         $telefono = trim($_POST['telefono'] ?? '');
         $telefono_adicional = trim($_POST['telefono_adicional'] ?? '');
-        
+
         // Campos de agencia
         $nombre_agencia = trim($_POST['nombre_agencia'] ?? '');
         $direccion = trim($_POST['direccion'] ?? '');
@@ -44,9 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $provincia = trim($_POST['provincia'] ?? '');
         $horario_atencion = trim($_POST['horario_atencion'] ?? '');
         $descripcion_empresa = trim($_POST['descripcion_empresa'] ?? '');
-        
-        if (empty($nombre)) {
-            $error = 'El nombre es obligatorio';
+
+        if (!validarString($nombre, 2, 100)) {
+            $error = 'El nombre debe tener entre 2 y 100 caracteres';
+        } elseif ($apellido !== '' && !validarString($apellido, 2, 100)) {
+            $error = 'El apellido debe tener entre 2 y 100 caracteres';
+        } elseif ($telefono !== '' && !validarTelefono($telefono)) {
+            $error = 'El teléfono principal no tiene un formato válido';
+        } elseif ($telefono_adicional !== '' && !validarTelefono($telefono_adicional)) {
+            $error = 'El teléfono adicional no tiene un formato válido';
         } else {
             $sql = "UPDATE ms_usuarios SET
                     nombre = ?,
@@ -83,10 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $new_password = $_POST['new_password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
         
+        $pwValidation = validarPasswordSegura($new_password);
         if (!password_verify($current_password, $usuario['password'])) {
             $error = 'La contraseña actual es incorrecta';
-        } elseif (strlen($new_password) < 6) {
-            $error = 'La nueva contraseña debe tener al menos 6 caracteres';
+        } elseif (!$pwValidation['valid']) {
+            $error = $pwValidation['error'];
         } elseif ($new_password !== $confirm_password) {
             $error = 'Las contraseñas no coinciden';
         } else {
@@ -339,7 +346,7 @@ include __DIR__ . '/../includes/navbar.php';
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                <small class="form-text">Mínimo 6 caracteres</small>
+                                <small class="form-text">Mínimo 12 caracteres, incluir mayúsculas, números y símbolos</small>
                             </div>
                             
                             <div class="form-group">

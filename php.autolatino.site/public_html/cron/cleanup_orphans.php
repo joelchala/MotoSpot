@@ -35,11 +35,11 @@ try {
     $pdo = getDB();
 
     // Obtener todos los nombres de archivo registrados en BD
-    $stmt = $pdo->query("SELECT imagen_url FROM ms_vehiculo_imagenes");
+    $stmt = $pdo->query("SELECT url_foto FROM ms_vehiculo_fotos");
     $registradas = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         // Guardar solo el basename para comparar con archivos en disco
-        $registradas[basename($row['imagen_url'])] = true;
+        $registradas[basename($row['url_foto'])] = true;
     }
 
     logInfo('[cron:cleanup] ' . count($registradas) . ' imágenes registradas en BD');

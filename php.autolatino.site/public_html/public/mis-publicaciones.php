@@ -16,6 +16,11 @@ $accion     = '';
 
 // Procesar acciones (pausar / activar / eliminar)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'], $_POST['vehiculo_id'])) {
+    if (!verificarCSRFToken($_POST['csrf_token'] ?? '')) {
+        header('Location: /mis-publicaciones.php');
+        exit();
+    }
+
     $vid    = intval($_POST['vehiculo_id']);
     $accion = $_POST['accion'];
 
@@ -45,9 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'], $_POST['veh
 
 // Obtener publicaciones del usuario
 $vehiculos = fetchAll(
-    "SELECT v.*,
-     (SELECT url_foto FROM ms_vehiculo_fotos WHERE vehiculo_id = v.id AND es_principal = 1 LIMIT 1) as foto_principal
+    "SELECT v.*, f.url_foto as foto_principal
      FROM ms_vehiculos v
+     LEFT JOIN ms_vehiculo_fotos f ON f.vehiculo_id = v.id AND f.es_principal = 1
      WHERE v.usuario_id = ?
      ORDER BY v.fecha_publicacion DESC",
     [$usuario['id']]
@@ -103,6 +108,7 @@ include __DIR__ . '/../includes/navbar.php';
                         <div class="form-actions" style="padding: 0 1rem 1rem;">
                             <?php if ($v['estado_publicacion'] === 'activo'): ?>
                                 <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="<?php echo generarCSRFToken(); ?>">
                                     <input type="hidden" name="vehiculo_id" value="<?php echo $v['id']; ?>">
                                     <input type="hidden" name="accion" value="pausar">
                                     <button type="submit" class="btn btn-outline btn-small">
@@ -111,6 +117,7 @@ include __DIR__ . '/../includes/navbar.php';
                                 </form>
                             <?php else: ?>
                                 <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="<?php echo generarCSRFToken(); ?>">
                                     <input type="hidden" name="vehiculo_id" value="<?php echo $v['id']; ?>">
                                     <input type="hidden" name="accion" value="activar">
                                     <button type="submit" class="btn btn-primary btn-small">

@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $valido) {
                 logError('[reset-password] Error actualizando contraseña: ' . $e->getMessage());
                 $mensaje = 'Ocurrió un error. Intenta nuevamente en unos minutos.';
                 $tipo    = 'error';
+            }
         }
     }
 }

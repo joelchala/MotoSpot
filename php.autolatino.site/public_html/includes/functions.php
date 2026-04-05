@@ -207,7 +207,7 @@ function validarAno($year) {
     $year = intval($year ?? 0);
     return $year >= 1900 && $year <= date('Y') + 1;
 }
-?>
+
 /**
  * Valida y sanitiza una URL interna (redirección segura)
  * Solo permite rutas internas comenzando con /
@@ -334,33 +334,3 @@ function generarNombreArchivoSeguro($originalName, $allowedExt = []) {
     
     return ['valid' => true, 'filename' => $filename];
 }
-?>
-
-/**
- * Polyfill para str_starts_with() - disponible en PHP 8.0+
- * Soporta compatibilidad con PHP 7.x si es necesario
- */
-if (!function_exists('str_starts_with')) {
-    function str_starts_with($haystack, $needle) {
-        return strpos($haystack, $needle) === 0;
-    }
-}
-
-/**
- * Polyfill para str_ends_with() - disponible en PHP 8.0+
- */
-if (!function_exists('str_ends_with')) {
-    function str_ends_with($haystack, $needle) {
-        return strlen($needle) === 0 || strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
-    }
-}
-
-/**
- * Polyfill para str_contains() - disponible en PHP 8.0+
- */
-if (!function_exists('str_contains')) {
-    function str_contains($haystack, $needle) {
-        return strpos($haystack, $needle) !== false;
-    }
-}
-?>

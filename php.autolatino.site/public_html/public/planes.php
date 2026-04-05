@@ -120,7 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_promo'])) {
     } else {
         $codigo = strtoupper(trim($_POST['codigo_promo']));
         
-        if (!estaAutenticado()) {
+        if (!preg_match('/^[A-Z0-9\-]{4,20}$/', $codigo)) {
+            $mensajePromo = 'Formato de código inválido';
+            $tipoPromo = 'error';
+        } elseif (!estaAutenticado()) {
             $mensajePromo = 'Debes iniciar sesión para canjear un código.';
             $tipoPromo = 'error';
         } else {

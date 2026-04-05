@@ -11,7 +11,7 @@ loadEnv();
 
 // Token de acceso (evita exposición pública)
 $token = $_GET['token'] ?? '';
-if ($token !== 'ms_check_2026') {
+if ($token !== env('HEALTH_CHECK_TOKEN', 'ms_check_2026')) {
     http_response_code(403);
     die(json_encode(['status' => 'forbidden']));
 }
@@ -137,7 +137,7 @@ http_response_code($allOk ? 200 : 503);
 
     <p style="color:#6b7280; margin-top:32px; font-size:0.85rem;">
         ⚠️ Protegido con token. No exponer públicamente.
-        | <a href="?token=ms_check_2026&format=json" style="color:#60a5fa;">Ver en JSON</a>
+        | <a href="?token=<?php echo htmlspecialchars(env('HEALTH_CHECK_TOKEN', 'ms_check_2026')); ?>&format=json" style="color:#60a5fa;">Ver en JSON</a>
     </p>
 </body>
 </html>

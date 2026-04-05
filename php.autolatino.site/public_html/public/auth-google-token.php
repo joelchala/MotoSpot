@@ -8,7 +8,7 @@ defined('MOTO_SPOT') || define('MOTO_SPOT', true);
 
 require_once __DIR__ . '/../includes/env.php';
 loadEnv();
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/logger.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -122,12 +122,9 @@ try {
         exit();
     }
 
-    // Iniciar sesión
-    $_SESSION['usuario_id']     = $usuario['id'];
-    $_SESSION['usuario_nombre'] = $usuario['nombre'];
-    $_SESSION['usuario_email']  = $usuario['email'];
-    $_SESSION['usuario_tipo']   = $usuario['tipo'];
-    $_SESSION['auth_provider']  = 'google';
+    // Iniciar sesión completa (incluye usuario_rol y todos los campos)
+    crearSesionUsuario($usuario);
+    $_SESSION['auth_provider'] = 'google';
 
     $pdo->prepare("UPDATE ms_usuarios SET ultimo_acceso = NOW() WHERE id = ?")
         ->execute([$usuario['id']]);

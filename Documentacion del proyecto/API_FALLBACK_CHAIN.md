@@ -412,3 +412,74 @@ rm -rf /ruta/storage/uploads/cache/stock_media/*
 **Última Actualización:** 04 de Abril, 2026  
 **Versión:** 1.0  
 **Estado:** ✅ Implementado y en producción
+
+---
+
+## ⚠️ ACTUALIZACIÓN 2026-04-04 — Problemas en la Cadena de Fallback
+
+### Problemas Detectados
+
+#### PROBLEMA-01: logger() No Existe — Crítico
+**Archivo:** `includes/stock_media.php` (múltiples ubicaciones)  
+**Problema:** Se llama a `logger()` que no existe. Solo `logInfo()`, `logWarning()`, `logError()` están disponibles, pero `logger.php` no se incluye en `stock_media.php`.  
+**Impacto:** Fatal Error cuando cualquier API de stock falla o retorna error.  
+**Corrección:** Agregar `require_once __DIR__ . '/logger.php';` al inicio de `stock_media.php` y usar `logWarning()`/`logError()`.
+
+#### PROBLEMA-02: Llamadas Secuenciales — Rendimiento
+**Problema:** `stockSearch()` llama a las 3 APIs secuencialmente. Si Unsplash timeout (8s) + Pexels timeout (8s) + Pixabay timeout (8s) = 24s potenciales.  
+**Corrección:** Implementar `curl_multi` para llamadas paralelas.
+
+#### PROBLEMA-03: HTTP 429 No Manejado
+**Archivo:** `includes/stock_media.php:stockHttpGet()`  
+**Problema:** HTTP 429 (Rate Limit) se trata como cualquier otro error. No hay mecanismo para backoff. Si una API retorna 429, las siguientes llamadas continúan golpeando la misma API.  
+**Corrección:**
+```php
+if ($httpCode === 429) {
+    logger('warning', 'API rate limited', ['url' => $url]);
+    // Marcar API como rate-limited por X minutos
+    return null;
+}
+```
+
+#### PROBLEMA-04: Index Llama 4 APIs Externas en Cada Request
+**Archivo:** `public/index.php`  
+**Problema:** `getHeroVideo()` + 3 llamadas a `pixabaySearchVideos()` = 4 llamadas a Pixabay en cada carga del index.  
+**Corrección:** Pre-cachear con cron job. Servir siempre desde cache.
+
+#### PROBLEMA-05: Cache Sin Invalidación
+**Problema:** Cache de 24h sin mecanismo de invalidación manual. Si una API cambia formato de respuesta, el cache obsoleto persiste hasta expiración.  
+**Corrección:** Agregar función `stockCacheClear($pattern)` para invalidación manual.
+
+#### PROBLEMA-06: logger.php No Incluido en stock_media.php
+**Problema:** `stock_media.php` llama a `logger()` (que no existe) sin haber incluido `logger.php` (que tiene `logWarning()` etc).  
+**Corrección:** Agregar al inicio:
+```php
+require_once __DIR__ . '/logger.php';
+```
+
+### Cobertura de Logging en APIs
+
+| Función | Logging implementado | Incluye logger.php | Usa función correcta |
+|---------|---------------------|-------------------|---------------------|
+| `stockHttpGet()` | ✅ | ❌ NO | ❌ `logger()` no existe |
+| `unsplashSearch()` | ❌ | — | — |
+| `pexelsSearch()` | ❌ | — | — |
+| `pixabaySearchImages()` | ❌ | — | — |
+| `pixabaySearchVideos()` | ❌ | — | — |
+| `stockSearch()` | ✅ try-catch | ❌ NO | ❌ `logger()` no existe |
+| `cloudinaryUpload()` | ❌ | — | — |
+| `googleExchangeCode()` | ❌ | — | — |
+| `googleGetUser()` | ❌ | — | — |
+
+### Recomendaciones de Mejora
+
+1. **Agregar `logger.php` a todos los módulos de integración**
+2. **Cambiar `logger()` por `logWarning()`/`logError()`/`logInfo()`**
+3. **Implementar `curl_multi` para llamadas paralelas**
+4. **Implementar backoff exponencial para rate limits**
+5. **Pre-cachear contenido de index con cron job**
+6. **Agregar health check para cada API externa**
+
+---
+
+*Última actualización: 2026-04-04 — Revisión Exhaustiva*

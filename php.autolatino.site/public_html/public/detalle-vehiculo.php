@@ -41,8 +41,11 @@ $fotos = fetchAll(
     [$vehiculoId]
 );
 
-// Incrementar contador de vistas
-executeQuery("UPDATE ms_vehiculos SET vistas = vistas + 1 WHERE id = ?", [$vehiculoId]);
+// Incrementar contador de vistas (una vez por sesión por vehículo)
+if (empty($_SESSION['viewed_' . $vehiculoId])) {
+    executeQuery("UPDATE ms_vehiculos SET vistas = vistas + 1 WHERE id = ?", [$vehiculoId]);
+    $_SESSION['viewed_' . $vehiculoId] = true;
+}
 
 // Verificar si está en favoritos
 $esFavorito = false;
@@ -56,10 +59,10 @@ if (estaAutenticado()) {
 
 // Vehículos similares
 $vehiculosSimilares = fetchAll(
-    "SELECT v.*, u.nombre as vendedor_nombre, u.nombre_agencia,
-     (SELECT url_foto FROM ms_vehiculo_fotos WHERE vehiculo_id = v.id AND es_principal = 1 LIMIT 1) as foto_principal
+    "SELECT v.*, u.nombre as vendedor_nombre, u.nombre_agencia, f.url_foto as foto_principal
      FROM ms_vehiculos v
      JOIN ms_usuarios u ON v.usuario_id = u.id
+     LEFT JOIN ms_vehiculo_fotos f ON f.vehiculo_id = v.id AND f.es_principal = 1
      WHERE v.id != ? AND v.estado_publicacion = 'activo' AND v.marca = ?
      ORDER BY v.fecha_publicacion DESC
      LIMIT 4",
